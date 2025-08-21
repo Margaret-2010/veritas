@@ -74,7 +74,25 @@ const AppState = {
     
     // 🚨 YOUR CODE STARTS HERE:
     
-    
+    isWalletConnected: false,
+    currentAccount: null,
+    currentNetwork: null,
+
+    selectedOption: null,
+    hasUserVoted: false,
+    currentPoll: null,
+
+    isLoading: false,
+    transactionInProgress: false,
+
+    pollTitle: "What's your favorite programming language?",
+    pollOptions: [
+        { id: 0, name: "JavaScript", votes: 0 },
+        { id: 1, name: "Python", votes: 0 },
+        { id: 2, name: "Rust", votes: 0 },
+        { id: 3, name: "Solidity", votes: 0 }
+    ]
+   // this is a change
     // 🚨 YOUR CODE ENDS HERE
 };
 
@@ -106,7 +124,20 @@ const CONFIG = {
     
     // 🚨 YOUR CODE STARTS HERE:
     
-    
+    CHAIN_ID: '0xaa36a7', 
+    CHAIN_NAME: 'Sepolia Testnet',
+    RPC_URL: 'https://sepolia.infura.io/v3/',
+
+
+    CONTRACT_ADDRESS: null, 
+
+    TRANSACTION_TIMEOUT: 30000, 
+    POLL_REFRESH_INTERVAL: 10000,
+
+    EXPLORER_URLS: {
+        '0xaa36a7': 'https://sepolia.etherscan.io'
+    }
+
     // 🚨 YOUR CODE ENDS HERE
 };
 
@@ -136,6 +167,8 @@ function showErrorMessage(message) {
     
     // 🚨 YOUR CODE STARTS HERE:
     
+    alert('❌ Error: ' + message);
+    console.error('❌ Error:', message);
     
     // 🚨 YOUR CODE ENDS HERE
 }
@@ -148,7 +181,9 @@ function showSuccessMessage(message) {
     // 3. Log to console for debugging
     
     // 🚨 YOUR CODE STARTS HERE:
-    
+
+    alert('✅ Success: ' + message);
+    console.log('✅ Success:', message);
     
     // 🚨 YOUR CODE ENDS HERE
 }
@@ -165,7 +200,9 @@ function formatWalletAddress(address) {
     
     // 🚨 YOUR CODE STARTS HERE:
     
-    
+    if (!address) return 'Not Connected';
+    return address.substring(0, 6) + '...' + address.substring(address.length - 4);
+
     // 🚨 YOUR CODE ENDS HERE
 }
 
@@ -195,7 +232,10 @@ function calculateTotalVotes() {
     //       }, 0);
     
     // 🚨 YOUR CODE STARTS HERE:
-    
+
+    return AppState.pollOptions.reduce((total, option) => {
+        return total + option.votes;
+    }, 0);
     
     // 🚨 YOUR CODE ENDS HERE
 }
@@ -210,8 +250,10 @@ function checkUserVotingStatus() {
     // HINT: Add a console.log to show the status
     
     // 🚨 YOUR CODE STARTS HERE:
-    
-    
+
+    AppState.hasUserVoted = false;
+    console.log('Checked user voting status:', AppState.hasUserVoted);
+
     // 🚨 YOUR CODE ENDS HERE
 }
 
@@ -240,7 +282,14 @@ function updateTotalVotesDisplay() {
     // HINT: element.textContent = `Total Votes: ${total}`;
     
     // 🚨 YOUR CODE STARTS HERE:
-    
+
+    const element = document.getElementById('total-votes');
+    if (!element) {
+        console.warn('Element with ID "total-votes" not found in DOM.');
+        return;
+    }
+    const total = calculateTotalVotes();
+    element.textContent = `Total Votes: ${total}`;
     
     // 🚨 YOUR CODE ENDS HERE
 }
@@ -386,6 +435,12 @@ Each TODO section will be explained in detail in the STUDENT-GUIDE.md
 function createVotingOptionElement(option, index) {
     // STUDENT TASK (Module 2): Create HTML elements for voting options
     // This function will be completed in Module 2
+
+    const button = document.createElement('button');
+    button.className = 'voting-option';
+    button.textContent = option.label || `Option ${index + 1}`;
+    button.onclick = () => selectVotingOption(option.id);
+    return button;
     
     console.log('📝 TODO: Complete this function in Module 2');
     console.log('📖 See STUDENT-GUIDE.md Module 2 for instructions');
@@ -402,19 +457,28 @@ function createVotingOptionElement(option, index) {
 
 // TODO 2.2: Complete the createVotingOptions function (Module 2)
 function createVotingOptions() {
+
     // STUDENT TASK (Module 2): Generate all voting option elements
+    
     console.log('📝 TODO: Complete this function in Module 2');
     
     // Placeholder implementation
     const container = document.getElementById('voting-options');
     if (container) {
         container.innerHTML = '<p style="text-align: center; padding: 20px;">📚 Complete Module 2 to see voting options here!</p>';
+        votingData.options.forEach((option, index) => {
+            const optionElement = createVotingOptionElement(option, index);
+            container.appendChild(optionElement);
+        });
     }
 }
 
 // TODO 2.3: Complete the selectVotingOption function (Module 2)
 function selectVotingOption(optionId) {
     // STUDENT TASK (Module 2): Handle voting option selection
+    selectedOptionId = optionId; 
+    updateVotingOptionsDisplay();
+
     console.log('📝 TODO: Complete this function in Module 2');
     console.log('🎯 Option selected:', optionId);
 }
@@ -422,6 +486,15 @@ function selectVotingOption(optionId) {
 // TODO 2.4: Complete the updateVotingOptionsDisplay function (Module 2)
 function updateVotingOptionsDisplay() {
     // STUDENT TASK (Module 2): Update visual state of voting options
+    const buttons = document.querySelectorAll('.voting-option');
+    buttons.forEach(button => {
+        if (button.textContent === votingData.options.find(opt => opt.id === selectedOptionId).label) {
+            button.classList.add('selected');
+        } else {
+            button.classList.remove('selected');
+        }
+    });
+// complete module
     console.log('📝 TODO: Complete this function in Module 2');
 }
 
